@@ -1,11 +1,15 @@
 package telebot
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 // API is the interface that wraps all basic methods for interacting
 // with Telegram Bot API.
 type API interface {
 	Raw(method string, payload interface{}) ([]byte, error)
+	RawWithContext(ctx context.Context, method string, payload interface{}) ([]byte, error)
 
 	Accept(query *PreCheckoutQuery, errorMessage ...string) error
 	AddStickerToSet(of Recipient, name string, sticker InputSticker) error
@@ -77,6 +81,7 @@ type API interface {
 	Restrict(chat *Chat, member *ChatMember) error
 	RevokeInviteLink(chat Recipient, link string) (*ChatInviteLink, error)
 	Send(to Recipient, what interface{}, opts ...interface{}) (*Message, error)
+	SendWithContext(ctx context.Context, to Recipient, what interface{}, opts ...interface{}) (*Message, error)
 	SendAlbum(to Recipient, a Album, opts ...interface{}) ([]Message, error)
 	SendPaid(to Recipient, stars int, a PaidAlbum, opts ...interface{}) (*Message, error)
 	SetAdminTitle(chat *Chat, user *User, title string) error

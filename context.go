@@ -429,10 +429,8 @@ func (c *nativeContext) Send(what interface{}, opts ...interface{}) error {
 	
 	// Check if we have a stored context for propagation
 	if ctx := c.GetContext(); ctx != nil {
-		if b, ok := c.b.(*Bot); ok {
-			_, err := b.SendWithContext(ctx, c.Recipient(), what, opts...)
-			return err
-		}
+		_, err := c.b.SendWithContext(ctx, c.Recipient(), what, opts...)
+		return err
 	}
 	
 	_, err := c.b.Send(c.Recipient(), what, opts...)
