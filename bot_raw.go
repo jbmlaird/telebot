@@ -20,6 +20,13 @@ import (
 // It also handles API errors, so you only need to unwrap
 // result field from json data.
 func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
+	return b.RawWithContext(context.Background(), method, payload)
+}
+
+// RawWithContext lets you call any method of Bot API manually with a context.
+// It also handles API errors, so you only need to unwrap
+// result field from json data.
+func (b *Bot) RawWithContext(ctx context.Context, method string, payload interface{}) ([]byte, error) {
 	url := b.URL + "/bot" + b.Token + "/" + method
 
 	var buf bytes.Buffer
@@ -30,7 +37,7 @@ func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
 	// Cancel the request immediately without waiting for the timeout
 	// when bot is about to stop.
 	// This may become important if doing long polling with long timeout.
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	go func() {
@@ -72,6 +79,10 @@ func (b *Bot) Raw(method string, payload interface{}) ([]byte, error) {
 }
 
 func (b *Bot) sendFiles(method string, files map[string]File, params map[string]string) ([]byte, error) {
+	return b.sendFilesWithContext(context.Background(), method, files, params)
+}
+
+func (b *Bot) sendFilesWithContext(ctx context.Context, method string, files map[string]File, params map[string]string) ([]byte, error) {
 	rawFiles := make(map[string]interface{})
 	for name, f := range files {
 		switch {
@@ -89,7 +100,7 @@ func (b *Bot) sendFiles(method string, files map[string]File, params map[string]
 	}
 
 	if len(rawFiles) == 0 {
-		return b.Raw(method, params)
+		return b.RawWithContext(ctx, method, params)
 	}
 
 	pipeReader, pipeWriter := io.Pipe()
@@ -118,7 +129,15 @@ func (b *Bot) sendFiles(method string, files map[string]File, params map[string]
 
 	url := b.URL + "/bot" + b.Token + "/" + method
 
-	resp, err := b.client.Post(url, writer.FormDataContentType(), pipeReader)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, pipeReader)
+	if err != nil {
+		err = wrapError(err)
+		pipeReader.CloseWithError(err)
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := b.client.Do(req)
 	if err != nil {
 		err = wrapError(err)
 		pipeReader.CloseWithError(err)
@@ -177,13 +196,17 @@ func (f *File) process(name string, files map[string]File) string {
 }
 
 func (b *Bot) sendText(to Recipient, text string, opt *SendOptions) (*Message, error) {
+	return b.sendTextWithContext(context.Background(), to, text, opt)
+}
+
+func (b *Bot) sendTextWithContext(ctx context.Context, to Recipient, text string, opt *SendOptions) (*Message, error) {
 	params := map[string]string{
 		"chat_id": to.Recipient(),
 		"text":    text,
 	}
 	b.embedSendOptions(params, opt)
 
-	data, err := b.Raw("sendMessage", params)
+	data, err := b.RawWithContext(ctx, "sendMessage", params)
 	if err != nil {
 		return nil, err
 	}
