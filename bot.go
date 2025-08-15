@@ -1,6 +1,7 @@
 package telebot
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -284,6 +285,11 @@ func (b *Bot) NewContext(u Update) Context {
 //   - Option (a shortcut flag for popular options)
 //   - ParseMode (HTML, Markdown, etc)
 func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Message, error) {
+	return b.SendWithContext(context.Background(), to, what, opts...)
+}
+
+// SendWithContext sends a Sendable object to the recipient with a context for propagation.
+func (b *Bot) SendWithContext(ctx context.Context, to Recipient, what interface{}, opts ...interface{}) (*Message, error) {
 	if to == nil {
 		return nil, ErrBadRecipient
 	}
@@ -292,8 +298,10 @@ func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Messag
 
 	switch object := what.(type) {
 	case string:
-		return b.sendText(to, object, sendOpts)
+		return b.sendTextWithContext(ctx, to, object, sendOpts)
 	case Sendable:
+		// For now, Sendables will use the old method without context
+		// To fully support context, we'd need to update the Sendable interface
 		return object.Send(b, to, sendOpts)
 	default:
 		return nil, ErrUnsupportedWhat

@@ -1,6 +1,7 @@
 package telebot
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"sync"
@@ -437,6 +438,15 @@ func (c *nativeContext) ThreadID() int {
 
 func (c *nativeContext) Send(what interface{}, opts ...interface{}) error {
 	opts = c.inheritOpts(opts...)
+	
+	// Check if we have a stored context for propagation
+	if ctx := c.GetContext(); ctx != nil {
+		if b, ok := c.b.(*Bot); ok {
+			_, err := b.SendWithContext(ctx, c.Recipient(), what, opts...)
+			return err
+		}
+	}
+	
 	_, err := c.b.Send(c.Recipient(), what, opts...)
 	return err
 }
@@ -617,4 +627,21 @@ func (c *nativeContext) Get(key string) interface{} {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 	return c.store[key]
+}
+
+// GetContext retrieves the context.Context stored in the telebot Context
+// This is used for propagating context through API calls
+func (c *nativeContext) GetContext() context.Context {
+	if val := c.Get("__context__"); val != nil {
+		if ctx, ok := val.(context.Context); ok {
+			return ctx
+		}
+	}
+	return nil
+}
+
+// SetContext stores a context.Context in the telebot Context
+// This is used for propagating context through API calls
+func (c *nativeContext) SetContext(ctx context.Context) {
+	c.Set("__context__", ctx)
 }
