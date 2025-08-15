@@ -285,11 +285,16 @@ func (b *Bot) NewContext(u Update) Context {
 //   - Option (a shortcut flag for popular options)
 //   - ParseMode (HTML, Markdown, etc)
 func (b *Bot) Send(to Recipient, what interface{}, opts ...interface{}) (*Message, error) {
-	return b.SendWithContext(context.Background(), to, what, opts...)
+	return b.sendInternal(context.Background(), to, what, opts...)
 }
 
 // SendWithContext sends a Sendable object to the recipient with a context for propagation.
 func (b *Bot) SendWithContext(ctx context.Context, to Recipient, what interface{}, opts ...interface{}) (*Message, error) {
+	return b.sendInternal(ctx, to, what, opts...)
+}
+
+// sendInternal is the actual implementation of Send
+func (b *Bot) sendInternal(ctx context.Context, to Recipient, what interface{}, opts ...interface{}) (*Message, error) {
 	if to == nil {
 		return nil, ErrBadRecipient
 	}
