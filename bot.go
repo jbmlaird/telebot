@@ -547,9 +547,9 @@ func (b *Bot) EditWithContext(ctx context.Context, msg Editable, what interface{
 
 	switch v := what.(type) {
 	case *ReplyMarkup:
-		return b.EditReplyMarkup(msg, v)
+		return b.EditReplyMarkupWithContext(ctx, msg, v)
 	case Inputtable:
-		return b.EditMedia(msg, v, opts...)
+		return b.EditMedia(msg, v, opts...)  // TODO: Need to add EditMediaWithContext
 	case string:
 		method = "editMessageText"
 		params["text"] = v
