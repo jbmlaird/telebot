@@ -891,6 +891,21 @@ func (b *Bot) Respond(c *Callback, resp ...*CallbackResponse) error {
 	return err
 }
 
+// RespondWithContext sends a response for a given callback query with context for tracing.
+// Like Respond, but accepts a context for distributed tracing.
+func (b *Bot) RespondWithContext(ctx context.Context, c *Callback, resp ...*CallbackResponse) error {
+	var r *CallbackResponse
+	if resp == nil {
+		r = &CallbackResponse{}
+	} else {
+		r = resp[0]
+	}
+
+	r.CallbackID = c.ID
+	_, err := b.RawWithContext(ctx, "answerCallbackQuery", r)
+	return err
+}
+
 // Answer sends a response for a given inline query. A query can only
 // be responded to once, subsequent attempts to respond to the same query
 // will result in an error.
