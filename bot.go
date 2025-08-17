@@ -535,6 +535,11 @@ func (b *Bot) CopyMany(to Recipient, msgs []Editable, opts ...*SendOptions) ([]M
 //	b.Edit(c, "edit inline message from the callback")
 //	b.Edit(r, "edit message from chosen inline result")
 func (b *Bot) Edit(msg Editable, what interface{}, opts ...interface{}) (*Message, error) {
+	return b.EditWithContext(context.Background(), msg, what, opts...)
+}
+
+// EditWithContext edits the given message with context for tracing.
+func (b *Bot) EditWithContext(ctx context.Context, msg Editable, what interface{}, opts ...interface{}) (*Message, error) {
 	var (
 		method string
 		params = make(map[string]string)
@@ -581,7 +586,7 @@ func (b *Bot) Edit(msg Editable, what interface{}, opts ...interface{}) (*Messag
 	sendOpts := b.extractOptions(opts)
 	b.embedSendOptions(params, sendOpts)
 
-	data, err := b.Raw(method, params)
+	data, err := b.RawWithContext(ctx, method, params)
 	if err != nil {
 		return nil, err
 	}
@@ -596,6 +601,11 @@ func (b *Bot) Edit(msg Editable, what interface{}, opts ...interface{}) (*Messag
 // If edited message is sent by the bot, returns it,
 // otherwise returns nil and ErrTrueResult.
 func (b *Bot) EditReplyMarkup(msg Editable, markup *ReplyMarkup) (*Message, error) {
+	return b.EditReplyMarkupWithContext(context.Background(), msg, markup)
+}
+
+// EditReplyMarkupWithContext edits reply markup with context for tracing.
+func (b *Bot) EditReplyMarkupWithContext(ctx context.Context, msg Editable, markup *ReplyMarkup) (*Message, error) {
 	msgID, chatID := msg.MessageSig()
 	params := make(map[string]string)
 
@@ -615,7 +625,7 @@ func (b *Bot) EditReplyMarkup(msg Editable, markup *ReplyMarkup) (*Message, erro
 	data, _ := json.Marshal(markup)
 	params["reply_markup"] = string(data)
 
-	data, err := b.Raw("editMessageReplyMarkup", params)
+	data, err := b.RawWithContext(ctx, "editMessageReplyMarkup", params)
 	if err != nil {
 		return nil, err
 	}
@@ -753,6 +763,11 @@ func (b *Bot) EditMedia(msg Editable, media Inputtable, opts ...interface{}) (*M
 //   - If the bot has can_delete_messages permission in a supergroup or a
 //     channel, it can delete any message there.
 func (b *Bot) Delete(msg Editable) error {
+	return b.DeleteWithContext(context.Background(), msg)
+}
+
+// DeleteWithContext deletes the message with context for tracing.
+func (b *Bot) DeleteWithContext(ctx context.Context, msg Editable) error {
 	msgID, chatID := msg.MessageSig()
 
 	params := map[string]string{
@@ -760,7 +775,7 @@ func (b *Bot) Delete(msg Editable) error {
 		"message_id": msgID,
 	}
 
-	_, err := b.Raw("deleteMessage", params)
+	_, err := b.RawWithContext(ctx, "deleteMessage", params)
 	return err
 }
 

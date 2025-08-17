@@ -37,6 +37,7 @@ type API interface {
 	DeclineJoinRequest(chat Recipient, user *User) error
 	DefaultRights(forChannels bool) (*Rights, error)
 	Delete(msg Editable) error
+	DeleteWithContext(ctx context.Context, msg Editable) error
 	DeleteCommands(opts ...interface{}) error
 	DeleteGroupPhoto(chat *Chat) error
 	DeleteGroupStickerSet(chat *Chat) error
@@ -46,11 +47,13 @@ type API interface {
 	DeleteTopic(chat *Chat, topic *Topic) error
 	Download(file *File, localFilename string) error
 	Edit(msg Editable, what interface{}, opts ...interface{}) (*Message, error)
+	EditWithContext(ctx context.Context, msg Editable, what interface{}, opts ...interface{}) (*Message, error)
 	EditCaption(msg Editable, caption string, opts ...interface{}) (*Message, error)
 	EditGeneralTopic(chat *Chat, topic *Topic) error
 	EditInviteLink(chat Recipient, link *ChatInviteLink) (*ChatInviteLink, error)
 	EditMedia(msg Editable, media Inputtable, opts ...interface{}) (*Message, error)
 	EditReplyMarkup(msg Editable, markup *ReplyMarkup) (*Message, error)
+	EditReplyMarkupWithContext(ctx context.Context, msg Editable, markup *ReplyMarkup) (*Message, error)
 	EditTopic(chat *Chat, topic *Topic) error
 	File(file *File) (io.ReadCloser, error)
 	FileByID(fileID string) (File, error)

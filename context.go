@@ -511,6 +511,19 @@ func (c *nativeContext) ForwardTo(to Recipient, opts ...interface{}) error {
 func (c *nativeContext) Edit(what interface{}, opts ...interface{}) error {
 	opts = c.inheritOpts(opts...)
 
+	// Check if we have a stored context for propagation
+	if ctx := c.GetContext(); ctx != nil {
+		if c.u.InlineResult != nil {
+			_, err := c.b.EditWithContext(ctx, c.u.InlineResult, what, opts...)
+			return err
+		}
+		if c.u.Callback != nil {
+			_, err := c.b.EditWithContext(ctx, c.u.Callback, what, opts...)
+			return err
+		}
+		return ErrBadContext
+	}
+
 	if c.u.InlineResult != nil {
 		_, err := c.b.Edit(c.u.InlineResult, what, opts...)
 		return err
@@ -557,6 +570,12 @@ func (c *nativeContext) Delete() error {
 	if msg == nil {
 		return ErrBadContext
 	}
+
+	// Check if we have a stored context for propagation
+	if ctx := c.GetContext(); ctx != nil {
+		return c.b.DeleteWithContext(ctx, msg)
+	}
+
 	return c.b.Delete(msg)
 }
 
