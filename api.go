@@ -81,6 +81,7 @@ type API interface {
 	ReplaceStickerInSet(of Recipient, stickerSet, oldSticker string, sticker InputSticker) (bool, error)
 	Reply(to *Message, what interface{}, opts ...interface{}) (*Message, error)
 	Respond(c *Callback, resp ...*CallbackResponse) error
+	RespondWithContext(ctx context.Context, c *Callback, resp ...*CallbackResponse) error
 	Restrict(chat *Chat, member *ChatMember) error
 	RevokeInviteLink(chat Recipient, link string) (*ChatInviteLink, error)
 	Send(to Recipient, what interface{}, opts ...interface{}) (*Message, error)
